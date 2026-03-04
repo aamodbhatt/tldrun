@@ -1723,9 +1723,10 @@ export default function App() {
               <div className="flex-1 max-w-xl text-center lg:text-left">
                 <div className="relative inline-flex mb-6">
                   <motion.div
-                    initial={{ opacity: 0, y: 6, scale: 0.95 }}
-                    animate={{ opacity: 1, y: [0, -3, 0], scale: [1, 1.02, 1] }}
-                    transition={{ delay: 0.35, duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                    initial={false}
+                    animate={{ y: [0, -2, 0, 2, 0], rotate: [0, -1, 0, 1, 0] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                    style={{ willChange: 'transform' }}
                     className="absolute -top-7 left-1/2 -translate-x-1/2 z-10 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[11px] font-bold uppercase tracking-wider shadow-md backdrop-blur-sm flex items-center gap-1.5"
                   >
                     <svg viewBox="0 0 12 12" className="w-3 h-3" fill="none" aria-hidden="true">
