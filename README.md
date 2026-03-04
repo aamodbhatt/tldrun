@@ -2,6 +2,10 @@
 
 Convert ML papers into runnable starter repositories with an anti-hype implementation lens.
 
+<p align="center">
+  <img src="public/favicon.svg" alt="TL;DRun icon" width="80" height="80" />
+</p>
+
 > Last updated: 2026-03-05
 
 ## Overview
