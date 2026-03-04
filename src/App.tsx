@@ -1717,7 +1717,11 @@ export default function App() {
                 </button>
                 <div className="ml-auto px-3 py-2 rounded-xl border border-border bg-background/70 text-xs font-mono text-muted-foreground">
                   {demoQuota
-                    ? `Daily runs: ${demoQuota.remaining}/${demoQuota.limit} · chats: ${demoQuota.chatRemaining ?? '-'}${demoQuota.chatLimit ? `/${demoQuota.chatLimit}` : ''} · resets in ${formatQuotaResetCountdown(demoQuota.resetAt, nowTick)}`
+                    ? `Daily runs: ${demoQuota.remaining}/${demoQuota.limit} · chats: ${demoQuota.chatRemaining ?? '-'}${demoQuota.chatLimit ? `/${demoQuota.chatLimit}` : ''} · ${
+                      (demoQuota.used || 0) > 0 || (demoQuota.chatUsed || 0) > 0
+                        ? `resets in ${formatQuotaResetCountdown(demoQuota.resetAt, nowTick)}`
+                        : 'resets every 24 hrs'
+                    }`
                     : 'Daily limit: loading...'}
                 </div>
               </div>
