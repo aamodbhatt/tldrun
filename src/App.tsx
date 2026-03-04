@@ -1567,7 +1567,7 @@ export default function App() {
           layout
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
           className={cn(
-            "h-16 flex items-center justify-between relative pl-16 pr-6 max-w-7xl",
+            "h-16 flex items-center justify-between relative pl-12 sm:pl-14 lg:pl-16 pr-3 sm:pr-4 lg:pr-6 max-w-7xl gap-2",
             isSidebarOpen ? "lg:ml-72 lg:w-[calc(100%-18rem)]" : "mx-auto w-full"
           )}
         >
@@ -1582,7 +1582,7 @@ export default function App() {
                 />
                 <BrandLogo />
               </div>
-              <h1 className="text-xl font-display font-bold tracking-tight">TL;DRun</h1>
+              <h1 className="text-lg sm:text-xl font-display font-bold tracking-tight">TL;DRun</h1>
             </div>
 
             {/* Walking Zoo */}
@@ -1597,9 +1597,9 @@ export default function App() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 relative z-10 bg-background/50 p-1.5 rounded-2xl backdrop-blur-md tour-step-theme">
+          <div className="flex items-center gap-1.5 sm:gap-3 relative z-10 bg-background/50 p-1 sm:p-1.5 rounded-2xl backdrop-blur-md tour-step-theme">
             {activeModel && (
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-primary/10 border border-primary/20 text-xs font-mono text-primary animate-in fade-in">
+              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-primary/10 border border-primary/20 text-xs font-mono text-primary animate-in fade-in">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 {activeModel}
               </div>
@@ -1619,7 +1619,7 @@ export default function App() {
 
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="lg:hidden absolute left-2 top-1/2 -translate-y-1/2 z-[70] w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm"
+          className="lg:hidden absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 z-[70] w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm"
           aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
         >
           <motion.div
@@ -1722,7 +1722,7 @@ export default function App() {
         layout
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className={cn(
-          "pt-24 pb-12 px-6 min-h-screen flex flex-col max-w-7xl",
+          "pt-20 sm:pt-24 pb-8 sm:pb-12 px-3 sm:px-6 min-h-screen flex flex-col max-w-7xl",
           isSidebarOpen ? "lg:ml-72 lg:w-[calc(100%-18rem)]" : "mx-auto w-full"
         )}
       >
@@ -1759,7 +1759,7 @@ export default function App() {
                 >
                   Papers
                 </button>
-                <div className="ml-auto px-3 py-2 rounded-xl border border-border bg-background/70 text-xs font-mono text-muted-foreground">
+                <div className="basis-full sm:basis-auto sm:ml-auto px-3 py-2 rounded-xl border border-border bg-background/70 text-[11px] sm:text-xs font-mono text-muted-foreground overflow-x-auto">
                   {demoQuota
                     ? `Daily runs: ${demoQuota.remaining}/${demoQuota.limit} · chats: ${demoQuota.chatRemaining ?? '-'}${demoQuota.chatLimit ? `/${demoQuota.chatLimit}` : ''} · ${
                       (demoQuota.used || 0) > 0 || (demoQuota.chatUsed || 0) > 0
@@ -1771,7 +1771,7 @@ export default function App() {
               </div>
 
               {homeTab === 'upload' && (
-              <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24">
+              <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-24">
               <div className="flex-1 max-w-xl text-center lg:text-left">
                 <div className="relative inline-flex mb-6">
                   <motion.div
@@ -1800,7 +1800,7 @@ export default function App() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
-                  className="text-5xl lg:text-7xl font-display font-bold tracking-tighter leading-[1.1] mb-6"
+                  className="text-3xl sm:text-5xl lg:text-7xl font-display font-bold tracking-tighter leading-[1.1] mb-4 sm:mb-6"
                 >
                   Academic Hype to <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">Runnable Code.</span>
@@ -1809,7 +1809,7 @@ export default function App() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.5 }}
-                  className="text-lg lg:text-xl text-muted-foreground mb-8 leading-relaxed"
+                  className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed"
                 >
                   Upload any ML paper. We'll extract the real pipeline, roast the missing details, estimate the true hardware cost, and generate a PyTorch repo in seconds.
                 </motion.p>
@@ -1824,7 +1824,7 @@ export default function App() {
                 <div className="bg-card/50 backdrop-blur-xl p-2 rounded-2xl border border-border shadow-md tour-step-upload">
                   <div
                     className={cn(
-                      "relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[320px]",
+                      "relative border-2 border-dashed rounded-2xl p-6 sm:p-12 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] sm:min-h-[320px]",
                       isDragging ? "border-primary bg-primary/5 scale-[0.98]" : "border-border hover:border-primary/50 hover:bg-muted/50",
                       file ? "border-emerald-500/50 bg-emerald-500/5" : ""
                     )}
@@ -1953,7 +1953,7 @@ export default function App() {
               {homeTab === 'papers' && (
                 <div className="flex-1 w-full space-y-4">
                   <div>
-                    <h3 className="text-3xl font-display font-bold tracking-tight">Papers</h3>
+                    <h3 className="text-2xl sm:text-3xl font-display font-bold tracking-tight">Papers</h3>
                     <p className="text-muted-foreground mt-1">Browse curated papers ({paperMinYear}+), filter by tags, then import directly into implementation mode.</p>
                   </div>
 
@@ -2186,11 +2186,11 @@ export default function App() {
               initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              className="grid grid-cols-1 xl:grid-cols-12 gap-6 min-h-[800px] xl:h-[calc(100vh-12rem)]"
+              className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 min-h-[560px] sm:min-h-[700px] xl:min-h-[800px] xl:h-[calc(100vh-12rem)]"
             >
               {activeTab === 'interrogate' ? (
                 <div className="xl:col-span-12 flex flex-col h-full bg-card/80 backdrop-blur-xl rounded-2xl border border-border overflow-hidden shadow-md animate-in fade-in zoom-in-95 duration-300">
-                  <div className="flex items-center gap-4 p-4 border-b border-border bg-background/50">
+                  <div className="flex flex-wrap items-center gap-3 p-3 sm:p-4 border-b border-border bg-background/50">
                     <button onClick={() => setActiveTab('reality')} className="p-2 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                       <ArrowLeft size={20} />
                     </button>
@@ -2201,13 +2201,13 @@ export default function App() {
                     <button
                       onClick={handleRefreshFullContext}
                       disabled={!USE_SERVER_PIPELINE || isRefreshingContext || isChatting}
-                      className="ml-auto inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-background text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-60"
+                      className="ml-auto w-full sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-border bg-background text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-60"
                     >
                       <RefreshCw size={14} className={cn(isRefreshingContext ? 'animate-spin' : '')} />
                       {isRefreshingContext ? 'Refreshing...' : 'Refresh full context'}
                     </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-card/30">
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-6 space-y-4 sm:space-y-6 custom-scrollbar bg-card/30">
                     {chatContextNotice && chatContextStatus && chatContextStatus !== 'full_text' && (
                       <div className="max-w-5xl mx-auto rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100 flex flex-col gap-2">
                         <div className="flex items-start gap-2 text-amber-200">
@@ -2225,15 +2225,15 @@ export default function App() {
                       </div>
                     )}
                     {chatHistory.map((msg, idx) => (
-                      <div key={idx} className={cn("flex gap-4 max-w-5xl mx-auto", msg.role === 'user' ? "flex-row-reverse" : "")}>
+                      <div key={idx} className={cn("flex gap-2 sm:gap-4 max-w-5xl mx-auto", msg.role === 'user' ? "flex-row-reverse" : "")}>
                         <div className={cn(
-                          "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-md",
+                          "w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-md",
                           msg.role === 'user' ? "bg-primary text-primary-foreground" : "bg-muted text-foreground border border-border"
                         )}>
                           {msg.role === 'user' ? <MessageSquare size={18} /> : <Sparkles size={18} />}
                         </div>
                         <div className={cn(
-                          "p-5 rounded-2xl max-w-[85%] text-sm leading-relaxed shadow-md overflow-x-auto",
+                          "p-3 sm:p-5 rounded-2xl max-w-[92%] sm:max-w-[85%] text-sm leading-relaxed shadow-md overflow-x-auto",
                           msg.role === 'user'
                             ? "bg-primary text-primary-foreground rounded-2xl-sm"
                             : "bg-background border border-border rounded-2xl-sm text-foreground prose-sm prose dark:prose-invert"
@@ -2262,20 +2262,20 @@ export default function App() {
                     )}
                     <div ref={chatEndRef} />
                   </div>
-                  <div className="p-4 bg-background/50 border-t border-border">
+                  <div className="p-3 sm:p-4 bg-background/50 border-t border-border">
                     <form onSubmit={handleSendMessage} className="relative max-w-5xl mx-auto flex items-center gap-3">
                       <input
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
                         placeholder="Ask about the methodology, datasets, or hidden tricks..."
-                        className="flex-1 bg-background border border-border rounded-2xl px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all shadow-md"
+                        className="flex-1 bg-background border border-border rounded-2xl px-4 sm:px-5 py-3 sm:py-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all shadow-md"
                         disabled={isChatting}
                       />
                       <button
                         type="submit"
                         disabled={!chatInput.trim() || isChatting}
-                        className="p-4 bg-primary text-primary-foreground rounded-2xl disabled:opacity-50 transition-opacity flex items-center justify-center shadow-md hover:bg-primary/90"
+                        className="p-3 sm:p-4 bg-primary text-primary-foreground rounded-2xl disabled:opacity-50 transition-opacity flex items-center justify-center shadow-md hover:bg-primary/90"
                       >
                         <Send size={20} />
                       </button>
@@ -2286,8 +2286,8 @@ export default function App() {
                 <>
                   {/* Sidebar */}
                   <div className="xl:col-span-12 flex flex-col gap-6 h-full">
-                    <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border p-6 shadow-md flex-shrink-0">
-                      <div className="flex items-center gap-4 mb-6">
+                    <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border p-4 sm:p-6 shadow-md flex-shrink-0">
+                      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
                         <div className="bg-emerald-500/10 text-emerald-500 p-3 rounded-2xl">
                           <CheckCircle size={28} />
                         </div>
@@ -2297,7 +2297,7 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <button
                           onClick={handleDownload}
                           className="flex-1 bg-primary text-primary-foreground px-4 py-3 rounded-2xl font-medium hover:bg-primary/90 transition-all shadow-md shadow-md/20 flex items-center justify-center gap-2 text-sm"
@@ -2345,7 +2345,7 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 bg-card/80 border border-border rounded-2xl p-2 shadow-sm">
+                    <div className="flex items-center gap-2 bg-card/80 border border-border rounded-2xl p-2 shadow-sm overflow-x-auto no-scrollbar">
                       <button
                         onClick={() => setResultPane('summary')}
                         className={cn(
@@ -2379,10 +2379,10 @@ export default function App() {
 
                     {resultPane === 'summary' && (
                     <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border overflow-hidden shadow-md flex-1 flex flex-col min-h-0">
-                      <div className="flex flex-wrap border-b border-border p-2 gap-2 flex-shrink-0">
+                      <div className="flex border-b border-border p-2 gap-2 flex-shrink-0 overflow-x-auto no-scrollbar">
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'readiness' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('readiness')}
@@ -2391,7 +2391,7 @@ export default function App() {
                         </button>
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'reality' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('reality')}
@@ -2400,7 +2400,7 @@ export default function App() {
                         </button>
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'architecture' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('architecture')}
@@ -2409,7 +2409,7 @@ export default function App() {
                         </button>
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'pipeline' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('pipeline')}
@@ -2418,7 +2418,7 @@ export default function App() {
                         </button>
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'assumptions' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('assumptions')}
@@ -2427,7 +2427,7 @@ export default function App() {
                         </button>
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'related' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('related')}
@@ -2436,7 +2436,7 @@ export default function App() {
                         </button>
                         <button
                           className={cn(
-                            "flex-1 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
+                            "shrink-0 py-1.5 px-3 text-xs font-medium rounded-2xl transition-all whitespace-nowrap",
                             activeTab === 'interrogate' ? "bg-background text-foreground shadow-md" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                           onClick={() => setActiveTab('interrogate')}
@@ -2444,8 +2444,8 @@ export default function App() {
                           Interrogate
                         </button>
                       </div>
-                      <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-                        <div className="mb-6 rounded-2xl border border-border/60 bg-muted/20 overflow-hidden">
+                      <div className="p-3 sm:p-6 overflow-y-auto flex-1 custom-scrollbar">
+                        <div className="mb-6 rounded-2xl border border-border/60 bg-muted/20 overflow-x-auto">
                           <table className="w-full text-xs sm:text-sm">
                             <tbody>
                               <tr className="border-b border-border/60">
@@ -2689,7 +2689,7 @@ export default function App() {
 
                   {/* Main Content - Code Viewer */}
                   {resultPane === 'code' && (
-                  <div className="xl:col-span-12 bg-card rounded-2xl border border-border overflow-hidden shadow-md flex flex-col h-full min-h-[520px]">
+                  <div className="xl:col-span-12 bg-card rounded-2xl border border-border overflow-hidden shadow-md flex flex-col h-full min-h-[420px] sm:min-h-[520px]">
                     <div className="flex bg-muted/50 border-b border-border overflow-x-auto no-scrollbar p-2 gap-1 flex-shrink-0">
                       {orderedResultFiles.map((filename) => (
                         <button
@@ -2711,7 +2711,7 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-                    <div className="flex-1 overflow-auto p-6 custom-scrollbar bg-card">
+                    <div className="flex-1 overflow-auto p-3 sm:p-6 custom-scrollbar bg-card">
                       <pre className="text-[13px] font-mono text-card-foreground leading-relaxed">
                         <code>{job.result.files[activeFile] || ''}</code>
                       </pre>
@@ -2733,7 +2733,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6"
             onClick={() => setIsDiagramModalOpen(false)}
           >
             <motion.div
@@ -2742,7 +2742,7 @@ export default function App() {
               exit={{ scale: 0.95, y: 10, opacity: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-card w-full max-w-5xl h-[85vh] rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden relative"
+              className="bg-card w-full max-w-5xl h-[85vh] rounded-2xl sm:rounded-3xl border border-border shadow-2xl flex flex-col overflow-hidden relative"
             >
               <div className="flex items-center justify-between border-b border-border p-4 bg-muted/30">
                 <h3 className="font-display font-bold text-lg flex items-center gap-2"><Network size={20} className="text-primary" /> Architecture Diagram</h3>
