@@ -23,6 +23,10 @@ const MermaidChart = ({ chart }: { chart: string }) => {
     if (ref.current && chart) {
       // Clean up markdown block wrappers if the LLM included them
       let cleanChart = chart.replace(/```mermaid\n?/g, '').replace(/```\n?/g, '').trim();
+      // Prefer left-to-right architecture layout to avoid overly tall diagrams.
+      cleanChart = cleanChart
+        .replace(/^(flowchart|graph)\s+(TB|TD|BT|RL|LR)\b/i, '$1 LR')
+        .replace(/^(flowchart|graph)\b(?!\s+(TB|TD|BT|RL|LR)\b)/i, '$1 LR');
       // Sanitize common LLM syntax mistakes that break Mermaid
       cleanChart = cleanChart
         .replace(/\|>/g, '|')    // Fix |> to | (invalid edge terminator)
