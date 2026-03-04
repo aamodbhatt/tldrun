@@ -1,73 +1,100 @@
 # TL;DRun
 
-Turn ML papers into runnable starter repos with an anti-hype reality check.
+Convert ML papers into runnable starter repositories with an anti-hype implementation lens.
 
 > Last updated: 2026-03-05
 
+## Overview
+TL;DRun helps you move from paper text to executable code quickly, while surfacing hidden implementation risk.
+
+Core flow:
+1. Upload a PDF or import a paper from discovery search.
+2. Generate a runnable scaffold (`train.py`, config, Docker, run scripts).
+3. Interrogate the paper context (full OA text when available; explicit fallback otherwise).
+4. Download a reproducible ZIP bundle with deterministic commands.
+
+## Highlights
+- Backend-only model execution (no browser provider keys).
+- OA-first full-text resolver for interrogation:
+  - OpenAlex -> Unpaywall -> arXiv -> Semantic Scholar -> metadata fallback.
+- Paper discovery focused on recent work with year bands (`2023+`, `2024+`, `2025+`, `2026+`).
+- Demo guardrails for spend control (IP-based run/chat quotas).
+- Repro bundle includes `venv` and Docker paths with smoke testing.
+
 ## Stack
-- Frontend: Vite + React + Tailwind
-- Backend: Express + Multer + JSZip
-- Providers: Gemini / OpenRouter / OpenAI / Anthropic / Groq
-- Paper sources: OpenAlex (+ OA fallbacks via Unpaywall, arXiv, Semantic Scholar)
+| Layer | Technology |
+|---|---|
+| Frontend | Vite, React, Tailwind |
+| Backend | Express, Multer, JSZip |
+| Model Providers | Gemini, OpenRouter, OpenAI, Anthropic, Groq |
+| Paper Sources | OpenAlex, Unpaywall, arXiv, Semantic Scholar |
 
-## Local Run
-1. `npm install`
-2. `cp .env.example .env`
-3. Fill at least `GEMINI_API_KEY` (or `OTHER_API_KEY`)
-4. `npm run dev`
-5. Open `http://localhost:3000`
+## Quick Start
+```bash
+npm install
+cp .env.example .env
+# set GEMINI_API_KEY (or OTHER_API_KEY)
+npm run dev
+```
 
-## Core APIs
-- `POST /api/auth/guest`
+Open: [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+| Variable | Required | Default | Purpose |
+|---|---|---|---|
+| `GEMINI_API_KEY` | Yes* | - | Primary backend provider key |
+| `OTHER_API_KEY` | No | - | Fallback provider key |
+| `APP_AUTH_SECRET` | Prod only | random in dev | Token signing secret |
+| `AUTH_REQUIRED` | No | `true` | Require guest bearer token on `/api/*` |
+| `DEMO_DAILY_RUN_LIMIT` | No | `3` | Daily generate/import cap per IP |
+| `DEMO_DAILY_CHAT_LIMIT` | No | `20` | Daily chat cap per IP |
+| `DEMO_DAILY_WINDOW_MS` | No | `86400000` | Quota window length |
+| `TRUST_PROXY` | No | `false` | Enable correct client IP behind trusted proxy |
+| `FULLTEXT_RESOLVER_TIMEOUT_MS` | No | `12000` | OA full-text fetch timeout |
+| `FULLTEXT_CACHE_TTL_MS` | No | `900000` | Full-text resolver cache TTL |
+| `UNPAYWALL_EMAIL` | No | empty | Unpaywall API identity |
+| `SEMANTIC_SCHOLAR_API_KEY` | No | empty | Optional higher-limit Semantic Scholar usage |
+| `DATABASE_URL` | No | empty | Optional Neon persistence |
+
+`*` At least one of `GEMINI_API_KEY` or `OTHER_API_KEY` is required.
+
+## Demo Quota Model (No Accounts)
+Run quota applies to:
 - `POST /api/generate`
-- `GET /api/status/:jobId`
-- `GET /api/download/:jobId`
-- `POST /api/chat`
-  - request supports `preferFullPaper` + `forceContextRefresh`
-  - response includes `usedFullPaper`, `contextStatus`, `contextNotice`
-- `GET /api/papers/search`
-  - supports `minYear` (default `2023`) to keep discovery focused on recent papers
 - `POST /api/papers/import`
-  - response includes `contextStatus`, `contextSource`, `contextReason`
 
-## Demo Quota (No Accounts Mode)
-- Per-IP demo run quota is enforced on generation-triggering routes:
-  - `POST /api/generate`
-  - `POST /api/papers/import`
-- Per-IP demo chat quota is enforced on:
-  - `POST /api/chat`
-- Default policy:
-  - `3` runs per `24h` per IP
-  - `20` chat requests per `24h` per IP
-- Config:
-  - `DEMO_DAILY_RUN_LIMIT`
-  - `DEMO_DAILY_CHAT_LIMIT`
-  - `DEMO_DAILY_WINDOW_MS`
-  - `TRUST_PROXY` (set only behind trusted reverse proxy if you need real client IP forwarding)
-- Quota headers returned:
-  - `X-Demo-Run-Limit`
-  - `X-Demo-Run-Remaining`
-  - `X-Demo-Run-Reset-At`
-- Exceeded quota returns `429` with `code=DEMO_QUOTA_EXCEEDED`.
+Chat quota applies to:
+- `POST /api/chat`
 
-## Data Storage (Demo Mode)
-- No database is required for local demo use.
-- Server jobs and quota buckets are in-memory (reset on server restart).
-- Browser-side saved paper history is stored in IndexedDB.
-- `DATABASE_URL` is optional and only used when enabling Neon persistence.
+Quota headers:
+- `X-Demo-Run-Limit`
+- `X-Demo-Run-Remaining`
+- `X-Demo-Run-Reset-At`
+- `X-Demo-Chat-Limit`
+- `X-Demo-Chat-Remaining`
+- `X-Demo-Chat-Reset-At`
 
-## Full-Paper Policy (OA-only)
-- Resolver chain: OpenAlex -> Unpaywall (DOI) -> arXiv -> Semantic Scholar -> fallback.
-- No paywall bypass.
-- If OA full text is unavailable, app falls back to abstract/metadata and prompts user to upload PDF.
+## API Surface
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/auth/guest` | Issue short-lived guest token |
+| `POST /api/generate` | Start pipeline generation from uploaded PDF |
+| `GET /api/status/:jobId` | Poll generation status |
+| `GET /api/download/:jobId` | Download generated ZIP |
+| `POST /api/chat` | Interrogate paper context |
+| `GET /api/papers/search` | Search papers (`minYear` supported; default `2023`) |
+| `POST /api/papers/import` | Import a discovered paper into generation pipeline |
+| `GET /api/demo/quota` | Fetch run/chat quota snapshot |
 
-## Paper Discovery Defaults
-- Curated paper cards are modern-first (2023+).
-- Search endpoint is also modern-first by default (`minYear=2023`).
-- Papers UI includes quick year bands (`2023+`, `2024+`, `2025+`, `2026+`) and sends selected `minYear` to search API.
+## Full-Paper Interrogation Policy
+- OA-only retrieval. No paywall bypass.
+- If full text is unavailable, TL;DRun is explicit:
+  - `contextStatus = abstract_only` or `upload_required`
+  - user is prompted to upload PDF for full interrogation.
 
-## Reproduce From Generated ZIP
-Each generated ZIP now includes deterministic artifacts:
+## Generated ZIP Contents
+Each bundle includes generated code plus deterministic tooling:
+- `train.py`, `config.yaml`, `requirements.txt`, `Dockerfile`, `README.md`
 - `scripts/bootstrap_venv.sh`
 - `scripts/smoke_test.sh`
 - `scripts/run_train.sh`
@@ -75,8 +102,10 @@ Each generated ZIP now includes deterministic artifacts:
 - `scripts/docker_run.sh`
 - `Makefile`
 - `RUNBOOK.md`
+- `HOW_TO_IMPLEMENT.txt`
 
-### Quickstart (venv)
+## Reproduction Commands
+### venv
 ```bash
 unzip tldrun-repo.zip -d tldrun-repo
 cd tldrun-repo
@@ -86,7 +115,7 @@ chmod +x scripts/*.sh
 ./scripts/run_train.sh
 ```
 
-### Quickstart (docker)
+### Docker
 ```bash
 unzip tldrun-repo.zip -d tldrun-repo
 cd tldrun-repo
@@ -96,27 +125,22 @@ chmod +x scripts/*.sh
 ./scripts/docker_run.sh train
 ```
 
-## Security Baseline (VAPT)
-Implemented:
-- frontend hard-locked to backend-only provider calls (no browser env/provider key path)
-- secure headers + production CSP/HSTS
-- API rate limiting
-- strict PDF upload checks + size limit
-- short-lived signed bearer tokens on `/api/*`
-- IP-based demo run quota with 24h rolling reset
-- in-memory TTL cleanup
-- OA-only full-text retrieval with explicit upload fallback
+## Security Posture (Current)
+Implemented now:
+- Backend-only key usage path.
+- Secure response headers + production CSP/HSTS.
+- API rate limiting and authenticated `/api/*` access.
+- Strict PDF upload validation and size limits.
+- IP-based daily quotas for run and chat.
+- OA-only full-text resolver with explicit fallback state.
 
-Still required before internet-facing launch:
-- real user auth + per-user authorization on all resources
-- persistent DB-backed jobs and ownership controls
-- observability + alerting + abuse detection
-- malware scanning for uploads
+Still needed before broad public rollout:
+- Real user auth + per-user authorization.
+- Durable job ownership model in DB.
+- Full observability and abuse detection.
+- Upload malware scanning.
 
-## Docs Map
-- `TODO.md`: execution backlog
-- `ROADMAP.md`: strategy
-- `STATUS.md`: current status and risks
-- `IMPLEMENTATIONS.md`: architecture and API details
-- `SECURITY.md`: VAPT rules and controls
-- `IMPLEMENTATION_PLAN_FULLTEXT_REPRO.md`: archived implementation plan + scope
+## Notes
+- Local dev works without a database.
+- In demo mode, server jobs/quotas are in-memory and reset on restart.
+- Browser history of analyzed papers is stored locally (IndexedDB).
