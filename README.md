@@ -64,7 +64,7 @@ Turn ML papers into runnable starter repos with an anti-hype reality check.
 ## Paper Discovery Defaults
 - Curated paper cards are modern-first (2023+).
 - Search endpoint is also modern-first by default (`minYear=2023`).
-- You can raise/lower the year threshold via query parameter when needed.
+- Papers UI includes quick year bands (`2023+`, `2024+`, `2025+`, `2026+`) and sends selected `minYear` to search API.
 
 ## Reproduce From Generated ZIP
 Each generated ZIP now includes deterministic artifacts:

@@ -272,7 +272,8 @@ const PRELOADED_PAPERS: SearchPaper[] = [
   },
 ];
 
-const PAPER_DISCOVERY_MIN_YEAR = 2023;
+const DEFAULT_PAPER_MIN_YEAR = 2023;
+const PAPER_YEAR_OPTIONS = [2023, 2024, 2025, 2026];
 
 const BrandLogo = () => (
   <div className="relative w-[22px] h-[22px] flex items-center justify-center">
@@ -680,6 +681,7 @@ export default function App() {
   const [paperSearchError, setPaperSearchError] = useState('');
   const [paperSearchAttempted, setPaperSearchAttempted] = useState(false);
   const [paperTagFilter, setPaperTagFilter] = useState('All');
+  const [paperMinYear, setPaperMinYear] = useState<number>(DEFAULT_PAPER_MIN_YEAR);
   const [importingPaperId, setImportingPaperId] = useState<string | null>(null);
   const [quickstartCopied, setQuickstartCopied] = useState<'venv' | 'docker' | null>(null);
   const [demoQuota, setDemoQuota] = useState<DemoQuota | null>(null);
@@ -1045,7 +1047,7 @@ export default function App() {
     setPaperSearchError('');
     setPaperSearchAttempted(true);
     try {
-      const response = await apiFetch(`/api/papers/search?q=${encodeURIComponent(query)}&perPage=8&minYear=${PAPER_DISCOVERY_MIN_YEAR}`);
+      const response = await apiFetch(`/api/papers/search?q=${encodeURIComponent(query)}&perPage=8&minYear=${paperMinYear}`);
       if (!response.ok) {
         const errText = await response.text();
         throw new Error(`Search failed (${response.status}): ${errText}`);
@@ -1455,12 +1457,12 @@ export default function App() {
   const catalogPapers = React.useMemo(() => {
     const deduped = new Map<string, SearchPaper>();
     [...PRELOADED_PAPERS, ...paperSearchResults].forEach((paper) => {
-      if (typeof paper.year === 'number' && paper.year < PAPER_DISCOVERY_MIN_YEAR) return;
+      if (typeof paper.year === 'number' && paper.year < paperMinYear) return;
       const key = paper.openAlexId || paper.id || paper.title.toLowerCase();
       if (!deduped.has(key)) deduped.set(key, paper);
     });
     return Array.from(deduped.values());
-  }, [paperSearchResults]);
+  }, [paperSearchResults, paperMinYear]);
   const normalizedQuery = paperQuery.trim().toLowerCase();
   const textFilteredPapers = React.useMemo(() => {
     if (!normalizedQuery) return catalogPapers;
@@ -1899,7 +1901,7 @@ export default function App() {
                 <div className="flex-1 w-full space-y-4">
                   <div>
                     <h3 className="text-3xl font-display font-bold tracking-tight">Papers</h3>
-                    <p className="text-muted-foreground mt-1">Browse curated papers (2023+), filter by tags, then import directly into implementation mode.</p>
+                    <p className="text-muted-foreground mt-1">Browse curated papers ({paperMinYear}+), filter by tags, then import directly into implementation mode.</p>
                   </div>
 
                   <form onSubmit={handlePaperSearch} className="flex flex-col sm:flex-row gap-2">
@@ -1917,6 +1919,28 @@ export default function App() {
                       {isPaperSearchLoading ? 'Searching...' : 'Search'}
                     </button>
                   </form>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-muted-foreground">Year:</span>
+                    {PAPER_YEAR_OPTIONS.map((year) => (
+                      <button
+                        key={year}
+                        type="button"
+                        onClick={() => {
+                          setPaperMinYear(year);
+                          setPaperTagFilter('All');
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-xs border transition-colors",
+                          paperMinYear === year
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-card/70 border-border text-muted-foreground hover:text-foreground hover:border-primary/40"
+                        )}
+                      >
+                        {year}+
+                      </button>
+                    ))}
+                  </div>
 
                   {paperTagOptions.length > 1 && (
                     <div className="space-y-2">
