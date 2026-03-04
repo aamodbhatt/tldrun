@@ -143,7 +143,7 @@ function getClientId(req: express.Request): string {
   return ip || 'unknown';
 }
 
-function consumeDemoRunQuota(req: express.Request) {
+function consumeDemoRunQuotaInMemory(req: express.Request) {
   const clientId = getClientId(req);
   const now = Date.now();
   const existing = demoRunBuckets.get(clientId);
@@ -177,7 +177,7 @@ function consumeDemoRunQuota(req: express.Request) {
   };
 }
 
-function getDemoRunQuotaSnapshot(req: express.Request) {
+function getDemoRunQuotaSnapshotInMemory(req: express.Request) {
   const now = Date.now();
   const clientId = getClientId(req);
   const existing = demoRunBuckets.get(clientId);
@@ -195,7 +195,7 @@ function getDemoRunQuotaSnapshot(req: express.Request) {
   };
 }
 
-function consumeDemoChatQuota(req: express.Request) {
+function consumeDemoChatQuotaInMemory(req: express.Request) {
   const clientId = getClientId(req);
   const now = Date.now();
   const existing = demoChatBuckets.get(clientId);
@@ -229,7 +229,7 @@ function consumeDemoChatQuota(req: express.Request) {
   };
 }
 
-function getDemoChatQuotaSnapshot(req: express.Request) {
+function getDemoChatQuotaSnapshotInMemory(req: express.Request) {
   const now = Date.now();
   const clientId = getClientId(req);
   const existing = demoChatBuckets.get(clientId);
@@ -247,9 +247,100 @@ function getDemoChatQuotaSnapshot(req: express.Request) {
   };
 }
 
-function enforceDemoRunQuota(req: express.Request, res: express.Response): boolean {
+async function consumePersistentQuota(
+  quotaType: 'run' | 'chat',
+  clientId: string,
+  limit: number,
+) {
+  if (!sql) {
+    return quotaType === 'run'
+      ? consumeDemoRunQuotaInMemory({ ip: clientId } as any)
+      : consumeDemoChatQuotaInMemory({ ip: clientId } as any);
+  }
+
+  const now = Date.now();
+  await ensureDbReady();
+  const rows = await sql`
+    INSERT INTO demo_quotas (quota_type, client_id, used, window_start, updated_at)
+    VALUES (${quotaType}, ${clientId}, 1, NOW(), NOW())
+    ON CONFLICT (quota_type, client_id)
+    DO UPDATE SET
+      used = CASE
+        WHEN EXTRACT(EPOCH FROM (NOW() - demo_quotas.window_start)) * 1000 >= ${DEMO_DAILY_WINDOW_MS}
+          THEN 1
+        ELSE demo_quotas.used + 1
+      END,
+      window_start = CASE
+        WHEN EXTRACT(EPOCH FROM (NOW() - demo_quotas.window_start)) * 1000 >= ${DEMO_DAILY_WINDOW_MS}
+          THEN NOW()
+        ELSE demo_quotas.window_start
+      END,
+      updated_at = NOW()
+    RETURNING
+      used,
+      (EXTRACT(EPOCH FROM window_start) * 1000)::BIGINT AS window_start_ms;
+  `;
+  const row: any = rows[0] || { used: 1, window_start_ms: now };
+  const used = Number(row.used || 0);
+  const windowStart = Number(row.window_start_ms || now);
+  const allowed = used <= limit;
+  return {
+    allowed,
+    used,
+    remaining: Math.max(0, limit - used),
+    resetAt: windowStart + DEMO_DAILY_WINDOW_MS,
+  };
+}
+
+async function getPersistentQuotaSnapshot(
+  quotaType: 'run' | 'chat',
+  clientId: string,
+  limit: number,
+) {
+  if (!sql) {
+    return quotaType === 'run'
+      ? getDemoRunQuotaSnapshotInMemory({ ip: clientId } as any)
+      : getDemoChatQuotaSnapshotInMemory({ ip: clientId } as any);
+  }
+
+  const now = Date.now();
+  await ensureDbReady();
+  const rows = await sql`
+    SELECT
+      used,
+      (EXTRACT(EPOCH FROM window_start) * 1000)::BIGINT AS window_start_ms
+    FROM demo_quotas
+    WHERE quota_type = ${quotaType} AND client_id = ${clientId}
+    LIMIT 1;
+  `;
+  if (!rows.length) {
+    return {
+      used: 0,
+      remaining: Math.max(0, limit),
+      resetAt: now + DEMO_DAILY_WINDOW_MS,
+    };
+  }
+  const row: any = rows[0];
+  const used = Number(row.used || 0);
+  const windowStart = Number(row.window_start_ms || now);
+  const expired = now - windowStart >= DEMO_DAILY_WINDOW_MS;
+  if (expired) {
+    return {
+      used: 0,
+      remaining: Math.max(0, limit),
+      resetAt: now + DEMO_DAILY_WINDOW_MS,
+    };
+  }
+  return {
+    used,
+    remaining: Math.max(0, limit - used),
+    resetAt: windowStart + DEMO_DAILY_WINDOW_MS,
+  };
+}
+
+async function enforceDemoRunQuota(req: express.Request, res: express.Response): Promise<boolean> {
   if (DEMO_DAILY_RUN_LIMIT <= 0) return true;
-  const quota = consumeDemoRunQuota(req);
+  const quota = await consumePersistentQuota('run', getClientId(req), DEMO_DAILY_RUN_LIMIT);
   res.setHeader('X-Demo-Run-Limit', String(DEMO_DAILY_RUN_LIMIT));
   res.setHeader('X-Demo-Run-Remaining', String(quota.remaining));
   res.setHeader('X-Demo-Run-Reset-At', String(quota.resetAt));
@@ -263,9 +354,9 @@ function enforceDemoRunQuota(req: express.Request, res: express.Response): boole
   return false;
 }
 
-function enforceDemoChatQuota(req: express.Request, res: express.Response): boolean {
+async function enforceDemoChatQuota(req: express.Request, res: express.Response): Promise<boolean> {
   if (DEMO_DAILY_CHAT_LIMIT <= 0) return true;
-  const quota = consumeDemoChatQuota(req);
+  const quota = await consumePersistentQuota('chat', getClientId(req), DEMO_DAILY_CHAT_LIMIT);
   res.setHeader('X-Demo-Chat-Limit', String(DEMO_DAILY_CHAT_LIMIT));
   res.setHeader('X-Demo-Chat-Remaining', String(quota.remaining));
   res.setHeader('X-Demo-Chat-Reset-At', String(quota.resetAt));
@@ -339,20 +430,26 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
-app.get('/api/demo/quota', (req, res) => {
-  const runSnapshot = getDemoRunQuotaSnapshot(req);
-  const chatSnapshot = getDemoChatQuotaSnapshot(req);
-  return res.json({
-    limit: DEMO_DAILY_RUN_LIMIT,
-    used: runSnapshot.used,
-    remaining: runSnapshot.remaining,
-    resetAt: runSnapshot.resetAt,
-    chatLimit: DEMO_DAILY_CHAT_LIMIT,
-    chatUsed: chatSnapshot.used,
-    chatRemaining: chatSnapshot.remaining,
-    chatResetAt: chatSnapshot.resetAt,
-    windowMs: DEMO_DAILY_WINDOW_MS,
-  });
+app.get('/api/demo/quota', async (req, res) => {
+  try {
+    const clientId = getClientId(req);
+    const runSnapshot = await getPersistentQuotaSnapshot('run', clientId, DEMO_DAILY_RUN_LIMIT);
+    const chatSnapshot = await getPersistentQuotaSnapshot('chat', clientId, DEMO_DAILY_CHAT_LIMIT);
+    return res.json({
+      limit: DEMO_DAILY_RUN_LIMIT,
+      used: runSnapshot.used,
+      remaining: runSnapshot.remaining,
+      resetAt: runSnapshot.resetAt,
+      chatLimit: DEMO_DAILY_CHAT_LIMIT,
+      chatUsed: chatSnapshot.used,
+      chatRemaining: chatSnapshot.remaining,
+      chatResetAt: chatSnapshot.resetAt,
+      windowMs: DEMO_DAILY_WINDOW_MS,
+    });
+  } catch (err: any) {
+    console.error('Failed to load demo quota snapshot:', err?.message || err);
+    return res.status(500).json({ error: 'Failed to load quota snapshot' });
+  }
 });
 
 const cleanupFile = (filePath: string) => {
@@ -1102,6 +1199,17 @@ async function ensureDbReady() {
     );
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS demo_quotas (
+      quota_type TEXT NOT NULL,
+      client_id TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      window_start TIMESTAMPTZ NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (quota_type, client_id)
+    );
+  `;
+
   dbReady = true;
 }
 
@@ -1633,7 +1741,7 @@ app.post('/api/generate', upload.single('paper'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No PDF file uploaded' });
   }
-  if (!enforceDemoRunQuota(req, res)) {
+  if (!(await enforceDemoRunQuota(req, res))) {
     return;
   }
 
@@ -1692,7 +1800,7 @@ app.get('/api/download/:jobId', async (req, res) => {
 
 app.post('/api/chat', async (req, res) => {
   try {
-    if (!enforceDemoChatQuota(req, res)) {
+    if (!(await enforceDemoChatQuota(req, res))) {
       return;
     }
     const message = String(req.body?.message || '').trim();
@@ -1791,7 +1899,7 @@ app.post('/api/papers/import', async (req, res) => {
     if (!openAlexId && !fallbackAbstract) {
       return res.status(400).json({ error: 'openAlexId or abstract is required.' });
     }
-    if (!enforceDemoRunQuota(req, res)) {
+    if (!(await enforceDemoRunQuota(req, res))) {
       return;
     }
 
@@ -1963,6 +2071,7 @@ async function startServer() {
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
     if (sql) console.log('Neon persistence enabled');
+    if (sql) console.log('Persistent demo quotas enabled (backed by Neon).');
     if (DEMO_DAILY_RUN_LIMIT > 0) {
       console.log(`Demo quota enabled: ${DEMO_DAILY_RUN_LIMIT} runs per ${Math.round(DEMO_DAILY_WINDOW_MS / (60 * 60 * 1000))}h per IP`);
     }
