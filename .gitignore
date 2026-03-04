@@ -10,3 +10,14 @@ uploads
 .DS_Store
 .vite
 *.tsbuildinfo
+
+# Local-only docs (kept on disk, not pushed)
+DESIGN.md
+DOCS_OPERATIONS.md
+IMPLEMENTATIONS.md
+IMPLEMENTATION_PLAN_FULLTEXT_REPRO.md
+ROADMAP.md
+SECURITY.md
+STATUS.md
+TODO.md
+db/README.md
