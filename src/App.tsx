@@ -690,6 +690,7 @@ export default function App() {
   const [quickstartCopied, setQuickstartCopied] = useState<'venv' | 'docker' | null>(null);
   const [demoQuota, setDemoQuota] = useState<DemoQuota | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   // Load history on mount
   useEffect(() => {
@@ -943,6 +944,32 @@ export default function App() {
     const timer = window.setInterval(() => setNowTick(Date.now()), 60_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.changedTouches?.[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const touch = e.changedTouches?.[0];
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!touch || !start) return;
+    if (window.innerWidth >= 1024) return;
+
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dy) > 70 || Math.abs(dx) < 80) return;
+
+    if (!isSidebarOpen && start.x <= 28 && dx > 80) {
+      setIsSidebarOpen(true);
+      return;
+    }
+    if (isSidebarOpen && dx < -80) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   const finalizeCompletedJob = (completedJob: Job, sourceFile: File) => {
     setJob(completedJob);
@@ -1497,7 +1524,11 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen font-sans text-foreground relative">
+    <div
+      className="min-h-screen font-sans text-foreground relative"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       <AnimatedBackground />
 
       {/* Pull to refresh */}
@@ -1521,7 +1552,7 @@ export default function App() {
           animate={{ x: isSidebarOpen ? 288 : 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute left-0 top-0 bottom-0 w-16 flex items-center justify-center z-[60] cursor-pointer group"
+          className="hidden lg:flex absolute left-0 top-0 bottom-0 w-16 items-center justify-center z-[60] cursor-pointer group"
         >
           <motion.div
             animate={{ rotate: isSidebarOpen ? 180 : 0 }}
@@ -1585,6 +1616,19 @@ export default function App() {
             </button>
           </div>
         </motion.div>
+
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="lg:hidden absolute left-2 top-1/2 -translate-y-1/2 z-[70] w-10 h-10 flex items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm"
+          aria-label={isSidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+        >
+          <motion.div
+            animate={{ rotate: isSidebarOpen ? 180 : 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          >
+            <ChevronRight size={20} />
+          </motion.div>
+        </button>
       </header>
 
       <AnimatePresence>
