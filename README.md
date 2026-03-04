@@ -26,6 +26,7 @@ Turn ML papers into runnable starter repos with an anti-hype reality check.
   - request supports `preferFullPaper` + `forceContextRefresh`
   - response includes `usedFullPaper`, `contextStatus`, `contextNotice`
 - `GET /api/papers/search`
+  - supports `minYear` (default `2023`) to keep discovery focused on recent papers
 - `POST /api/papers/import`
   - response includes `contextStatus`, `contextSource`, `contextReason`
 
@@ -59,6 +60,11 @@ Turn ML papers into runnable starter repos with an anti-hype reality check.
 - Resolver chain: OpenAlex -> Unpaywall (DOI) -> arXiv -> Semantic Scholar -> fallback.
 - No paywall bypass.
 - If OA full text is unavailable, app falls back to abstract/metadata and prompts user to upload PDF.
+
+## Paper Discovery Defaults
+- Curated paper cards are modern-first (2023+).
+- Search endpoint is also modern-first by default (`minYear=2023`).
+- You can raise/lower the year threshold via query parameter when needed.
 
 ## Reproduce From Generated ZIP
 Each generated ZIP now includes deterministic artifacts:

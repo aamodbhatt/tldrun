@@ -1,0 +1,5 @@
+{
+  "name": "TL;DRun",
+  "description": "Turn academic hype into runnable code. Extracts the real pipeline, roasts the missing details, and generates a PyTorch repo from any ML paper.",
+  "requestFramePermissions": []
+}

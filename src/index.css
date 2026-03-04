@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Lora", "Georgia", "Times New Roman", serif;
+  --font-display: "Playfair Display", "Georgia", "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+}
+
+@layer base {
+  :root {
+    /* Very Beige Light Theme */
+    --background: #fdf6e3;
+    --foreground: #65534c;
+    --card: #f8eecf;
+    --card-foreground: #65534c;
+    --primary: #c48a71;
+    --primary-foreground: #ffffff;
+    --muted: #eedeb0;
+    --muted-foreground: #9a8c7b;
+    --border: #e3d3a6;
+    --ring: #c48a71;
+    --accent: #eedeb0;
+    --accent-foreground: #65534c;
+    --radius: 1rem;
+  }
+
+  .dark {
+    /* Soft Dark Theme */
+    --background: #232329;
+    --foreground: #e4e4e7;
+    --card: #2a2a32;
+    --card-foreground: #e4e4e7;
+    --primary: #818cf8;
+    --primary-foreground: #ffffff;
+    --muted: #32323a;
+    --muted-foreground: #a1a1aa;
+    --border: #3f3f46;
+    --ring: #818cf8;
+    --accent: #32323a;
+    --accent-foreground: #e4e4e7;
+  }
+
+  .pink {
+    /* Soft Fuchsia/Orchid Blend (Pink & Violet) */
+    --background: #fdf4ff;
+    --foreground: #4a2d59;
+    --card: #fae8ff;
+    --card-foreground: #4a2d59;
+    --primary: #c026d3;
+    --primary-foreground: #ffffff;
+    --muted: #f5d0fe;
+    --muted-foreground: #a277af;
+    --border: #f0abfc;
+    --ring: #c026d3;
+    --accent: #f5d0fe;
+    --accent-foreground: #4a2d59;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    /* Vercel-style sleek space-grotesk headers */
+    @apply font-display tracking-tight font-medium;
+  }
+}
+
+/* Custom View Transitions layout easing */
+::view-transition-group(root) {
+  animation-duration: 0.7s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  animation: theme-wave 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  z-index: 2;
+}
+
+@keyframes theme-wave {
+  0% {
+    clip-path: circle(0% at 85% 5%);
+  }
+
+  100% {
+    clip-path: circle(150% at 85% 5%);
+  }
+}
+
+@layer components {}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full transition-colors;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+@keyframes aurora-slow {
+  0% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+
+  50% {
+    transform: translate(10%, 15%) scale(1.1) rotate(5deg);
+  }
+
+  100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes aurora-fast {
+  0% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+
+  33% {
+    transform: translate(-10%, 5%) scale(1.2) rotate(-5deg);
+  }
+
+  66% {
+    transform: translate(5%, -15%) scale(0.9) rotate(2deg);
+  }
+
+  100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes aurora-medium {
+  0% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+
+  50% {
+    transform: translate(-15%, -10%) scale(1.15) rotate(-3deg);
+  }
+
+  100% {
+    transform: translate(0%, 0%) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes walk {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-walk {
+  animation: walk 12s linear infinite;
+}
+
+.animate-aurora-slow {
+  animation: aurora-slow 25s ease-in-out infinite;
+}
+
+.animate-aurora-fast {
+  animation: aurora-fast 18s ease-in-out infinite;
+}
+
+.animate-aurora-medium {
+  animation: aurora-medium 22s ease-in-out infinite;
+}
