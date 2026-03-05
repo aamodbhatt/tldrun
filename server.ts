@@ -34,14 +34,17 @@ const UNPAYWALL_EMAIL = (process.env.UNPAYWALL_EMAIL || '').trim();
 const SEMANTIC_SCHOLAR_API_KEY = (process.env.SEMANTIC_SCHOLAR_API_KEY || '').trim();
 const DEFAULT_PROD_ORIGIN = 'https://tldrun.vercel.app';
 const DEFAULT_DEV_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173'];
+function normalizeOrigin(origin: string): string {
+  return String(origin || '').trim().replace(/\/+$/, '');
+}
 const configuredOrigins = FRONTEND_ORIGIN
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter(Boolean);
 const allowedOrigins = new Set<string>([
-  ...configuredOrigins,
-  DEFAULT_PROD_ORIGIN,
-  ...(process.env.NODE_ENV === 'production' ? [] : DEFAULT_DEV_ORIGINS),
+  ...configuredOrigins.map(normalizeOrigin),
+  normalizeOrigin(DEFAULT_PROD_ORIGIN),
+  ...(process.env.NODE_ENV === 'production' ? [] : DEFAULT_DEV_ORIGINS.map(normalizeOrigin)),
 ]);
 
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
@@ -123,7 +126,7 @@ app.disable('x-powered-by');
 app.use(express.json({ limit: '2mb' }));
 
 app.use((req, res, next) => {
-  const originHeader = req.headers.origin;
+  const originHeader = normalizeOrigin(String(req.headers.origin || ''));
   if (!originHeader) {
     if (req.method === 'OPTIONS') {
       res.sendStatus(204);
