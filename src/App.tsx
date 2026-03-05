@@ -1768,6 +1768,9 @@ export default function App() {
                     }`
                     : 'Daily limit: loading...'}
                 </div>
+                <div className="basis-full text-[11px] sm:text-xs text-muted-foreground px-1 sm:px-0">
+                  First request may take ~30-60s while backend wakes up.
+                </div>
               </div>
 
               {homeTab === 'upload' && (
