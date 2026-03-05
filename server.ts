@@ -23,6 +23,7 @@ const PAPER_FETCH_TIMEOUT_MS = Number(process.env.PAPER_FETCH_TIMEOUT_MS || 12_0
 const FULLTEXT_RESOLVER_TIMEOUT_MS = Number(process.env.FULLTEXT_RESOLVER_TIMEOUT_MS || PAPER_FETCH_TIMEOUT_MS);
 const FULLTEXT_CACHE_TTL_MS = Number(process.env.FULLTEXT_CACHE_TTL_MS || 15 * 60 * 1000);
 const DB_URL = (process.env.DATABASE_URL || '').trim();
+const FRONTEND_ORIGIN = (process.env.FRONTEND_ORIGIN || '').trim();
 const AUTH_REQUIRED = process.env.AUTH_REQUIRED !== 'false';
 const AUTH_TOKEN_TTL_SEC = Number(process.env.AUTH_TOKEN_TTL_SEC || 60 * 60 * 8);
 const DEMO_DAILY_RUN_LIMIT = Math.max(0, Number(process.env.DEMO_DAILY_RUN_LIMIT || 3));
@@ -31,6 +32,17 @@ const DEMO_DAILY_WINDOW_MS = Math.max(60_000, Number(process.env.DEMO_DAILY_WIND
 const TRUST_PROXY = String(process.env.TRUST_PROXY || 'false').trim();
 const UNPAYWALL_EMAIL = (process.env.UNPAYWALL_EMAIL || '').trim();
 const SEMANTIC_SCHOLAR_API_KEY = (process.env.SEMANTIC_SCHOLAR_API_KEY || '').trim();
+const DEFAULT_PROD_ORIGIN = 'https://tldrun.vercel.app';
+const DEFAULT_DEV_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:4173', 'http://127.0.0.1:4173'];
+const configuredOrigins = FRONTEND_ORIGIN
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const allowedOrigins = new Set<string>([
+  ...configuredOrigins,
+  DEFAULT_PROD_ORIGIN,
+  ...(process.env.NODE_ENV === 'production' ? [] : DEFAULT_DEV_ORIGINS),
+]);
 
 const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
 const OPENROUTER_MODELS = [
@@ -109,6 +121,35 @@ if (TRUST_PROXY === 'true') {
 }
 app.disable('x-powered-by');
 app.use(express.json({ limit: '2mb' }));
+
+app.use((req, res, next) => {
+  const originHeader = req.headers.origin;
+  if (!originHeader) {
+    if (req.method === 'OPTIONS') {
+      res.sendStatus(204);
+      return;
+    }
+    next();
+    return;
+  }
+
+  if (allowedOrigins.has(originHeader)) {
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Origin', originHeader);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  } else if (req.method === 'OPTIONS') {
+    res.status(403).json({ error: 'Origin not allowed by CORS policy.' });
+    return;
+  }
+
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
