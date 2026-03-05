@@ -315,12 +315,20 @@ const USE_SERVER_PIPELINE = true;
 const ALLOW_INSECURE_CLIENT_KEYS = false;
 const ENV_GEMINI_KEY = '';
 const ENV_OTHER_KEY = '';
+const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
 
 // Track which model+provider was last successfully used
 let _lastUsedModel = '';
 
 function sanitizeApiKey(key: string | undefined): string {
   return (key || '').trim().replace(/^["']|["']$/g, '');
+}
+
+function buildApiUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
+  if (!API_BASE_URL) return path;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
 }
 
 function buildClientContextNotice(status: ContextStatus, reason: string): string {
@@ -832,7 +840,7 @@ export default function App() {
       return session.token;
     }
 
-    const response = await fetch('/api/auth/guest', { method: 'POST' });
+    const response = await fetch(buildApiUrl('/api/auth/guest'), { method: 'POST' });
     if (!response.ok) {
       throw new Error(`Authentication bootstrap failed (${response.status})`);
     }
@@ -897,7 +905,7 @@ export default function App() {
       if (token) headers.set('Authorization', `Bearer ${token}`);
     }
 
-    const response = await fetch(input, { ...init, headers });
+    const response = await fetch(buildApiUrl(input), { ...init, headers });
     captureQuotaHeaders(response.headers);
     if (USE_SERVER_PIPELINE && response.status === 401 && retry) {
       await ensureAuthToken(true);
