@@ -392,6 +392,10 @@ function fieldLooksMissing(value: any): boolean {
   return text === 'n/a' || text.includes('todo') || text.includes('specify') || text.includes('tbd');
 }
 
+function normalizedTextLength(value: any): number {
+  return String(value || '').trim().length;
+}
+
 function computeImplementationReadiness(
   pipeline: any,
   contextStatus: ContextStatus | '',
@@ -444,6 +448,35 @@ function computeImplementationReadiness(
     score -= 8;
     blockers.push('Core hyperparameters are missing.');
     actions.push('Set baseline LR/batch/weight decay values and track them in config.yaml.');
+  }
+
+  // Reward specificity so scores spread more across papers with different detail quality.
+  const detailFields = [
+    pipeline?.datasets,
+    pipeline?.preprocessing,
+    pipeline?.model_architecture,
+    pipeline?.training_procedure,
+    pipeline?.hyperparameters,
+    pipeline?.evaluation_protocol,
+  ];
+  const avgDetailLength = detailFields.reduce((acc, field) => acc + normalizedTextLength(field), 0) / detailFields.length;
+  if (avgDetailLength > 320) {
+    score += 8;
+  } else if (avgDetailLength > 220) {
+    score += 5;
+  } else if (avgDetailLength > 140) {
+    score += 2;
+  } else if (avgDetailLength < 70) {
+    score -= 8;
+    blockers.push('Implementation details are too shallow to execute reliably.');
+    actions.push('Expand each pipeline section with concrete settings and expected outputs.');
+  }
+
+  const assumptionCount = assumptions.length;
+  if (assumptionCount === 0 && !fieldLooksMissing(pipeline?.training_procedure)) {
+    score += 3;
+  } else if (assumptionCount >= 6) {
+    score -= 4;
   }
 
   score = clampScore(Math.round(score));
@@ -1871,8 +1904,21 @@ export default function App() {
                             <p className="text-lg font-medium text-foreground">
                               Drop your PDF here
                             </p>
-                            <p className="text-sm text-muted-foreground mt-1">or click to browse</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              or <span className="font-semibold text-primary">click to browse</span>
+                            </p>
                           </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setHomeTab('papers');
+                            }}
+                            className="relative z-20 mt-2 inline-flex items-center rounded-lg border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
+                          >
+                            Import from Papers tab
+                          </button>
                         </motion.div>
                       ) : (
                         <motion.div
